@@ -28,11 +28,9 @@ export default function RegisterPage() {
         event.preventDefault();
         post("/auth/register/post", {
             onSuccess: () => {
-                // Redirect ke halaman login setelah pendaftaran berhasil
                 reset("name", "email", "password");
             },
             onError: () => {
-                // Reset field password jika ada error
                 reset("password");
             },
         });
@@ -40,14 +38,23 @@ export default function RegisterPage() {
 
     return (
         <AuthLayout>
-            <div className="container mx-auto px-4 py-8">
-                <div className="w-[360px] mx-auto">
-                    <Card>
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
+                <div className="w-full max-w-md px-4">
+                    <div className="text-center mb-8">
+                        <div className="text-5xl mb-4">👋</div>
+                        <h1 className="text-3xl font-bold text-cyan-600 mb-2">
+                            Selamat Datang
+                        </h1>
+                        <p className="text-gray-600">
+                            Daftar untuk melanjutkan produktivitas Anda
+                        </p>
+                    </div>
+
+                    <Card className="shadow-lg">
                         <CardHeader>
-                            <CardTitle>Daftar untuk akun baru</CardTitle>
+                            <CardTitle className="text-xl">Daftar</CardTitle>
                             <CardDescription>
-                                Isi formulir di bawah ini untuk membuat akun
-                                baru
+                                Buat akun baru Anda untuk memulai
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -68,11 +75,12 @@ export default function RegisterPage() {
                                             required
                                         />
                                         {errors.name && (
-                                            <div className="text-sm text-red-600">
+                                            <div className="text-sm text-red-600 mt-1">
                                                 {errors.name}
                                             </div>
                                         )}
                                     </Field>
+
                                     <Field>
                                         <FieldLabel htmlFor="email">
                                             Email
@@ -87,18 +95,17 @@ export default function RegisterPage() {
                                             }
                                             required
                                         />
-                                        {errors.password && (
-                                            <div className="text-sm text-red-600">
-                                                {errors.password}
+                                        {errors.email && (
+                                            <div className="text-sm text-red-600 mt-1">
+                                                {errors.email}
                                             </div>
                                         )}
                                     </Field>
+
                                     <Field>
-                                        <div>
-                                            <FieldLabel htmlFor="password">
-                                                Kata Sandi
-                                            </FieldLabel>
-                                        </div>
+                                        <FieldLabel htmlFor="password">
+                                            Kata Sandi
+                                        </FieldLabel>
                                         <Input
                                             id="password"
                                             type="password"
@@ -113,35 +120,41 @@ export default function RegisterPage() {
                                             required
                                         />
                                         {errors.password && (
-                                            <div className="text-sm text-red-600">
+                                            <div className="text-sm text-red-600 mt-1">
                                                 {errors.password}
                                             </div>
                                         )}
                                     </Field>
-                                    <Field>
-                                        <Button
-                                            type="submit"
-                                            className="w-full"
-                                            disabled={processing}
+
+                                    <Button
+                                        type="submit"
+                                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                                        disabled={processing}
+                                    >
+                                        {processing ? "Memproses..." : "Daftar →"}
+                                    </Button>
+
+                                    <div className="text-center text-sm text-gray-600">
+                                        atau
+                                    </div>
+
+                                    <FieldDescription className="text-center text-sm">
+                                        Sudah punya akun?{" "}
+                                        <Link
+                                            href="/auth/login"
+                                            className="text-cyan-600 hover:underline font-medium"
                                         >
-                                            {processing
-                                                ? "Memproses..."
-                                                : "Daftar"}
-                                        </Button>
-                                        <FieldDescription className="text-center">
-                                            Sudah punya akun?{" "}
-                                            <Link
-                                                href="/auth/login"
-                                                className="text-primary hover:underline"
-                                            >
-                                                Masuk di sini
-                                            </Link>
-                                        </FieldDescription>
-                                    </Field>
+                                            Masuk sekarang
+                                        </Link>
+                                    </FieldDescription>
                                 </FieldGroup>
                             </form>
                         </CardContent>
                     </Card>
+
+                    <p className="text-center text-sm text-gray-600 mt-6">
+                        Dengan mendaftar, Anda menyetujui syarat dan ketentuan kami
+                    </p>
                 </div>
             </div>
         </AuthLayout>
