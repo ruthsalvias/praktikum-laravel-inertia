@@ -36,13 +36,32 @@ class AuthController extends Controller
 
         // Periksa apakah pengguna berhasil login
         if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['email' => 'Email atau password salah.']
+                ], 422);
+            }
             return back()->withErrors([
                 'email' => 'Email atau password salah.',
             ])->onlyInput('email');
         }
 
+        // Regenerate session token after successful login to prevent CSRF issues
+        // This creates a new session ID and CSRF token
+        $request->session()->regenerate();
+        
+        // Also regenerate the token for extra security
+        $request->session()->regenerateToken();
+
         // Jika berhasil, redirect ke halaman home
-        return redirect()->route('home');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('home')
+            ]);
+        }
+        return redirect()->route('home')->with('success', 'Login berhasil!');
     }
 
     // Register

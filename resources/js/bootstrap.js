@@ -30,13 +30,31 @@ window.axios.interceptors.request.use(
     }
 );
 
+// Track 419 errors to prevent infinite loops
+let is419Retrying = false;
+
 // Add response interceptor to handle 419 errors gracefully
 window.axios.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 419) {
-            // Token expired - refresh the page to get new token
-            window.location.reload();
+        // If 419 and it's a GET request (page load), retry once after a small delay
+        if (error.response?.status === 419 && error.config?.method?.toUpperCase() === 'GET' && !is419Retrying) {
+            is419Retrying = true;
+            
+            // Wait a bit for session to settle, then retry
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    axios.request(error.config)
+                        .then((response) => {
+                            is419Retrying = false;
+                            resolve(response);
+                        })
+                        .catch((retryError) => {
+                            is419Retrying = false;
+                            reject(retryError);
+                        });
+                }, 100); // Small delay to allow session to settle
+            });
         }
         return Promise.reject(error);
     }

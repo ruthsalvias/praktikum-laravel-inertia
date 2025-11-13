@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-    const { success } = usePage().props;
+    const { success, csrf_token } = usePage().props;
 
     const { data, setData, post, processing, errors } = useForm({
         email: "",
@@ -30,8 +30,57 @@ export default function LoginPage() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        // Langsung submit tanpa validasi panjang password
-        post("/auth/login/post");
+        // Get CSRF token from meta tag or props
+        const token = csrf_token || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        // Create FormData to ensure proper encoding
+        const formData = new FormData();
+        formData.append('email', data.email);
+        formData.append('password', data.password);
+        if (token) {
+            formData.append('_token', token);
+        }
+        
+        // Use fetch directly with credentials
+        fetch('/auth/login/post', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                ...(token && { 'X-CSRF-TOKEN': token }),
+            },
+            credentials: 'include',
+            body: formData,
+        })
+        .then(response => {
+            if (response.status === 419) {
+                // Token expired - reload to get new token
+                window.location.reload();
+                return null;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data) return;
+            
+            if (data.success) {
+                // Success - redirect to home
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.href = '/';
+                }
+            } else if (data.errors) {
+                // Handle errors - display them
+                if (data.errors.email) {
+                    setData('email', data.email || '');
+                }
+                console.error('Login errors:', data.errors);
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+        });
     };
 
     return (

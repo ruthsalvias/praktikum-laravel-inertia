@@ -15,12 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.auth' => \App\Http\Middleware\CheckAuthMiddleware::class,
             'handle.inertia' => \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
-
-        // Ensure CSRF and session middleware are applied to web routes
-        $middleware->web(\Illuminate\Session\Middleware\StartSession::class);
-        $middleware->web(\Illuminate\View\Middleware\ShareErrorsFromSession::class);
-        $middleware->web(\App\Http\Middleware\VerifyCsrfToken::class);
-        $middleware->web(\Illuminate\Session\Middleware\AuthenticateSession::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -20,8 +20,8 @@ export default function TodoPage({ todos, stats, search: initialSearch }) {
     const [localTodos, setLocalTodos] = useState(todos.data || []);
     const [localStats, setLocalStats] = useState(stats);
     const [detailTodo, setDetailTodo] = useState(null);
-    // Keep a static recent todos list (don't change when paginating)
-    const [recentTodos] = useState(() => (todos.data || []).slice(0, 6));
+    // Recent todos will be dynamically computed from localTodos
+    const recentTodos = localTodos.slice(0, 6);
     // Keep today's tasks stable across pagination (snapshot from initial data)
     const [todaysTasks, setTodaysTasks] = useState(() => {
         const todayKey = new Date().toDateString();
@@ -387,29 +387,30 @@ export default function TodoPage({ todos, stats, search: initialSearch }) {
                                 <div className="text-sm text-slate-700 font-medium bg-white px-4 py-1.5 rounded-lg border border-slate-300 shadow-sm">{today.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
                             </div>
                             <div className="space-y-3">
-                                {todaysTasks.map((t) => (
-                                    <div key={t.id} className="flex items-start gap-3 p-4 rounded-xl bg-white shadow-sm border border-slate-200">
-                                        <div className="shrink-0 mt-1">
-                                            <input
-                                                type="checkbox"
-                                                checked={!!t.is_finished}
-                                                onChange={() => toggleTodoRequest(t)}
-                                                disabled={!!loadingMap[t.id]}
-                                                aria-label={`Tandai ${t.title} sebagai selesai`}
-                                                className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-400"
-                                            />
+                                {todaysTasks.length > 0 ? (
+                                    todaysTasks.map((t) => (
+                                        <div key={t.id} className="flex items-start gap-3 p-4 rounded-xl bg-white shadow-sm border border-slate-200">
+                                            <div className="shrink-0 mt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!t.is_finished}
+                                                    onChange={() => toggleTodoRequest(t)}
+                                                    disabled={!!loadingMap[t.id]}
+                                                    aria-label={`Tandai ${t.title} sebagai selesai`}
+                                                    className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-400"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className={`font-semibold text-slate-800 ${t.is_finished ? 'line-through text-slate-500' : ''}`}>{t.title}</div>
+                                                <div className="text-xs text-slate-600 mt-1">{t.description ? t.description.replace(/<[^>]+>/g, '').slice(0,80) : ''}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-sm font-semibold ${t.is_finished ? 'text-emerald-700' : 'text-amber-700'}`}>{t.is_finished ? 'Selesai' : 'To Do'}</div>
+                                                <div className="text-xs text-slate-500 mt-1">{new Date(t.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
+                                            </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <div className={`font-semibold text-slate-800 ${t.is_finished ? 'line-through text-slate-500' : ''}`}>{t.title}</div>
-                                            <div className="text-xs text-slate-600 mt-1">{t.description ? t.description.replace(/<[^>]+>/g, '').slice(0,80) : ''}</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`text-sm font-semibold ${t.is_finished ? 'text-emerald-700' : 'text-amber-700'}`}>{t.is_finished ? 'Selesai' : 'To Do'}</div>
-                                            <div className="text-xs text-slate-500 mt-1">{new Date(t.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {localTodos.filter(t => new Date(t.created_at).toDateString() === today.toDateString()).length === 0 && (
+                                    ))
+                                ) : (
                                     <div className="text-center text-slate-500 py-8">Tidak ada tugas untuk hari ini</div>
                                 )}
                             </div>

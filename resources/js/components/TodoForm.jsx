@@ -65,44 +65,65 @@ export default function TodoForm({ todo = null, onSuccess, onCancel }) {
         setLoading(true);
 
         try {
-            const data = new FormData();
-            data.append("title", formData.title);
-            data.append("description", formData.description);
-            if (formData.cover instanceof File) {
-                data.append("cover", formData.cover);
-            }
-
-            // Include CSRF token for Laravel (prevents 419 errors)
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (csrfToken) {
-                data.append("_token", csrfToken);
-            }
-
             const method = todo ? "put" : "post";
             const url = todo ? `/todos/${todo.id}` : "/todos";
 
-            const headers = {
-                "X-Requested-With": "XMLHttpRequest",
-            };
-            if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+            // Helper function to make the fetch request
+            const makeRequest = async () => {
+                const data = new FormData();
+                data.append("title", formData.title);
+                data.append("description", formData.description);
+                if (formData.cover instanceof File) {
+                    data.append("cover", formData.cover);
+                }
 
-            const response = await fetch(url, {
-                method: method.toUpperCase(),
-                body: data,
-                headers,
-                credentials: 'same-origin',
-            });
+                // Get fresh CSRF token from meta tag each time
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (csrfToken) {
+                    data.append("_token", csrfToken);
+                }
+
+                const headers = {
+                    "X-Requested-With": "XMLHttpRequest",
+                };
+                if (csrfToken) {
+                    headers['X-CSRF-TOKEN'] = csrfToken;
+                }
+
+                const response = await fetch(url, {
+                    method: method.toUpperCase(),
+                    body: data,
+                    headers,
+                    credentials: 'include',
+                });
+
+                return response;
+            };
+
+            // Make the initial request
+            let response = await makeRequest();
+
+            // If we get 419 (CSRF mismatch), refresh the page's CSRF token by fetching the home page, then retry
+            if (response.status === 419) {
+                try {
+                    // Fetch home page to refresh CSRF token in the session
+                    await fetch('/', { credentials: 'include' });
+                    // Retry the request with refreshed CSRF token
+                    response = await makeRequest();
+                } catch (e) {
+                    // If refresh fails, use original 419 response
+                }
+            }
 
             const result = await response.json();
 
-                if (result.success) {
+            if (result.success) {
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil!",
                     text: result.message,
                     confirmButtonText: "OK",
                 });
-                // Pass the created/updated todo back to the parent so UI can update immediately
                 onSuccess?.(result.todo);
             } else {
                 Swal.fire({
