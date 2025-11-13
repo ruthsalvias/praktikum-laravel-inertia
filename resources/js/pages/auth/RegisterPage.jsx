@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AuthLayout from "@/layouts/AuthLayout";
 import {
     Card,
@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useForm } from "@inertiajs/react";
+import { AlertCircle } from "lucide-react";
 
 export default function RegisterPage() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -24,8 +25,18 @@ export default function RegisterPage() {
         password: "",
     });
 
+    const [passwordError, setPasswordError] = useState("");
+
     const handleSubmit = (event) => {
         event.preventDefault();
+        
+        // Validasi password minimal 6 karakter
+        if (data.password.length < 6) {
+            setPasswordError("Password harus minimal 6 karakter");
+            return;
+        }
+        
+        setPasswordError("");
         post("/auth/register/post", {
             onSuccess: () => {
                 reset("name", "email", "password");
@@ -34,6 +45,16 @@ export default function RegisterPage() {
                 reset("password");
             },
         });
+    };
+
+    const handlePasswordChange = (e) => {
+        const value = e.target.value;
+        setData("password", value);
+        
+        // Clear error saat user mulai mengetik
+        if (passwordError && value.length >= 6) {
+            setPasswordError("");
+        }
     };
 
     return (
@@ -109,19 +130,20 @@ export default function RegisterPage() {
                                         <Input
                                             id="password"
                                             type="password"
-                                            placeholder="Masukkan kata sandi"
+                                            placeholder="Masukkan kata sandi (min. 6 karakter)"
                                             value={data.password}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "password",
-                                                    e.target.value
-                                                )
-                                            }
+                                            onChange={handlePasswordChange}
                                             required
                                         />
-                                        {errors.password && (
-                                            <div className="text-sm text-red-600 mt-1">
-                                                {errors.password}
+                                        <FieldDescription className="text-xs text-gray-500 mt-1">
+                                            Password harus minimal 6 karakter
+                                        </FieldDescription>
+                                        {(passwordError || errors.password) && (
+                                            <div className="flex items-start gap-2 mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                                                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                                <div className="text-sm text-red-600">
+                                                    {passwordError || errors.password}
+                                                </div>
                                             </div>
                                         )}
                                     </Field>
