@@ -30,6 +30,7 @@ export default function LoginPage() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        // Langsung submit tanpa validasi panjang password
         post("/auth/login/post");
     };
 
