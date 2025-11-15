@@ -77,6 +77,11 @@ export default function TodoForm({ todo = null, onSuccess, onCancel }) {
                     data.append("cover", formData.cover);
                 }
 
+                // For PUT requests with FormData, append _method field
+                if (method === "put") {
+                    data.append("_method", "PUT");
+                }
+
                 // Get fresh CSRF token from meta tag each time
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 if (csrfToken) {
@@ -91,7 +96,7 @@ export default function TodoForm({ todo = null, onSuccess, onCancel }) {
                 }
 
                 const response = await fetch(url, {
-                    method: method.toUpperCase(),
+                    method: "POST",
                     body: data,
                     headers,
                     credentials: 'include',
